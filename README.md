@@ -1,7 +1,3 @@
-This is a comprehensive `README.md` template designed for your GitHub repository. It organizes your build instructions, configuration files, and the hardware-specific tweaks you discovered to make this stack work on the **RX 6700 XT**.
-
----
-
 # AMD Local AI Stack: RX 6700 XT + ROCm 7.x
 
 A high-performance, fully local AI ecosystem optimized for AMD Radeon GPUs (specifically the **RX 6700 XT / gfx1031**). This setup integrates LLMs, Vision models, Text-to-Speech (TTS), Speech-to-Text (STT), and Document Parsing into a single, unified interface via **Open WebUI**.
