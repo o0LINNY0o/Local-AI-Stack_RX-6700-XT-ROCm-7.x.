@@ -1,0 +1,32 @@
+#OPEN TERMINAL
+
+REM --- PULL NEW VERSION OF LLAMA.CPP ---
+git clone https://github.com/ggml-org/llama.cpp
+cd llama.cpp
+
+
+REM --- 1. Initialize Visual Studio Environment ---
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+
+REM --- 2. Add Git/Perl to PATH ---
+set PATH=%PATH%;C:\Program Files\Git\usr\bin
+
+REM --- 3. Prepare the Build Directory ---
+cd C:\llama-build\llama.cpp
+rmdir /s /q build
+
+REM --- 4. Set Compiler and ROCm Variables ---
+set CC=C:\AMD\ROCm\7.2\lib\llvm\bin\clang.exe
+set CXX=C:\AMD\ROCm\7.2\lib\llvm\bin\clang++.exe
+set HIP_PATH=C:\AMD\ROCm\7.2
+set ROCM_PATH=C:\AMD\ROCm\7.2
+set HIP_PLATFORM=amd
+
+REM --- 5. THE FIX: Force the Bitcode Path via Environment Variable ---
+set HIP_DEVICE_LIB_PATH=C:\AMD\ROCm\7.2\lib\llvm\amdgcn\bitcode
+
+REM --- 6. Configure (Also passing the flag to be double-safe) ---
+cmake -B build -G "Ninja" -DGGML_HIP=ON -DAMDGPU_TARGETS=gfx1031 -DCMAKE_C_COMPILER="%CC%" -DCMAKE_CXX_COMPILER="%CXX%" -DCMAKE_PREFIX_PATH="C:\AMD\ROCm\7.2" -DCMAKE_BUILD_TYPE=Release -DHIP_PLATFORM=amd -DLLAMA_CURL=OFF -DCMAKE_HIP_FLAGS="--rocm-device-lib-path=C:/AMD/ROCm/7.2/lib/llvm/amdgcn/bitcode"
+
+REM --- 7. Compile ---
+cmake --build build --config Release

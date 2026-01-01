@@ -1,0 +1,11 @@
+https://github.com/guinmoon/rocm7_builds/releases/tag/build2025-12-02
+
+#Install
+
+-Download all wheels.
+
+-Install rocm_skd wheels
+pip install "rocm-7.2.0.tar.gz" "rocm_sdk_libraries_custom-7.2.0-py3-none-win_amd64.whl" "rocm_sdk_devel-7.2.0-py3-none-win_amd64.whl" "rocm_sdk_core-7.2.0-py3-none-win_amd64.whl"
+
+-Install PyTorch wheels
+pip install "torch-2.9.1+rocmsdk20251203-cp312-cp312-win_amd64.whl" "torchaudio-2.9.0+rocmsdk20251203-cp312-cp312-win_amd64.whl" "torchvision-0.24.0+rocmsdk20251203-cp312-cp312-win_amd64.whl"

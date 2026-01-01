@@ -1,0 +1,110 @@
+Guide to rebuilding **whisper.cpp** with **Vulkan (AMD)** support, including the code change to make it work perfectly with OpenWebUI.
+
+### Prerequisites
+Ensure you have these installed:
+1.  **Visual Studio Community** (Desktop development with C++).
+2.  **CMake** (Added to System PATH).
+3.  **Vulkan SDK** (Installed and PC restarted).
+4.  **Git**.
+
+---
+
+### Step 1: Clone and Prepare
+Open **PowerShell** in a folder where you want to build this (e.g., `C:\llamaROCM`).
+
+```powershell
+# 1. Clone the repository
+git clone https://github.com/ggml-org/whisper.cpp.git
+cd whisper.cpp
+```
+
+### Step 2: Modify Source Code (Crucial for OpenWebUI)
+Before building, we will hardcode the API path so OpenWebUI connects instantly.
+
+1.  Navigate to `C:\llamaROCM\whisper.cpp\examples\server\`
+2.  Open **`server.cpp`** in Notepad.
+3.  Press **Ctrl+F** and search for `"/inference"`.
+4.  Replace `"/inference"` with `"/v1/audio/transcriptions"`.
+
+    *It should look like this:*
+    ```cpp
+    svr.Post("/v1/audio/transcriptions", [](const httplib::Request & req, httplib::Response & res) {
+    ```
+5.  **Save** and close the file.
+
+### Step 3: Build with Vulkan
+Back in your **PowerShell** window (inside the `whisper.cpp` folder):
+
+```powershell
+# 1. Configure the build for Vulkan
+cmake -B build -DGGML_VULKAN=1 -DCMAKE_BUILD_TYPE=Release
+
+# 2. Compile the server
+cmake --build build --config Release -j --target whisper-server
+```
+
+### Step 4: Gather Necessary Files
+Go to your build folder: `C:\llamaROCM\whisper.cpp\build\bin\Release`
+
+1.  **FFmpeg:**
+    *   Copy `ffmpeg.exe` into this folder. (Download from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) if you lost it).
+2.  **Models:**
+    *   Create a folder named `models` inside `Release`.
+    *   Put your `ggml-large-v3-turbo-q5_0.bin` inside it.
+    *   Put your `ggml-silero-v6.2.0.bin` (VAD model) inside it.
+
+### Step 5: Create the Launcher
+Create a new file named **`run_whisper.bat`** inside the `Release` folder and paste this code.
+
+*Note: This script forces English (`en`) and VAD for maximum speed.*
+
+```batch
+@echo off
+setlocal
+
+:: --- CONFIGURATION ---
+set "CURRENT_DIR=%~dp0"
+set "EXE=%CURRENT_DIR%whisper-server.exe"
+set "MODEL=%CURRENT_DIR%models\ggml-large-v3-turbo-q5_0.bin"
+set "VAD_MODEL=%CURRENT_DIR%models\ggml-silero-v6.2.0.bin"
+
+:: Network Settings (Port 8383 to avoid conflicts)
+set PORT=8383
+set HOST=0.0.0.0
+
+echo.
+echo ===================================================
+echo  Whisper Vulkan Server (AMD Optimized)
+echo  Listening on: http://%HOST%:%PORT%
+echo  Endpoint:     /v1/audio/transcriptions
+echo ===================================================
+echo.
+
+if not exist "%EXE%" (
+    echo [ERROR] whisper-server.exe missing!
+    pause
+    exit /b
+)
+if not exist "%VAD_MODEL%" (
+    echo [ERROR] VAD Model missing! Check 'models' folder.
+    pause
+    exit /b
+)
+
+:: LAUNCH SERVER
+"%EXE%" -m "%MODEL%" --host %HOST% --port %PORT% --convert --language en --vad --vad-model "%VAD_MODEL%"
+
+pause
+```
+
+### Step 6: Final Connection
+1.  **Run** the batch file.
+2.  **Firewall:** If asked, Allow Access to **Private** and **Public** networks.
+3.  **OpenWebUI Settings:**
+    *   **Engine:** `OpenAI`
+    *   **URL:** `http://192.168.1.XX:8383/v1`
+        *(Replace `192.168.1.XX` with your actual LAN IP).*
+    *   **Model:** `whisper-1`
+4.  **Save**.
+
+You are now running a custom-compiled, GPU-accelerated Whisper server perfectly tuned for OpenWebUI.
